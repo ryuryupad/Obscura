@@ -1,193 +1,203 @@
-<!--
-  Obscura – Open Source Lua Obfuscator
-
-  All processing is performed locally in the browser.
-  This project does NOT collect or transmit any data.
-
-  If you are reading this source:
-  Yes, it's open. No, it's not magic.
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Obscura</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Obscura – Lua Obfuscator</title>
 
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: monospace;
-    background: #0b0d10;
-    color: #e6e6e6;
-  }
+/* ===== Base ===== */
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
-  .app {
-    max-width: 1100px;
-    margin: auto;
-    padding: 20px;
-  }
+body {
+  margin: 0;
+  background: #020617;
+  color: #e5e7eb;
+  padding: 20px;
+}
 
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
+/* ===== Intro Overlay ===== */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: #020617;
+  z-index: 9999;
+  overflow: hidden;
+  animation: introFadeOut 1s ease forwards;
+  animation-delay: 2.6s;
+}
 
-  h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    letter-spacing: 2px;
-  }
+.intro-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  animation: introPop 1.6s ease forwards;
+}
 
-  .subtitle {
-    color: #9aa0a6;
-    font-size: 0.9rem;
-  }
+.intro-content h1 {
+  letter-spacing: 0.35em;
+  font-size: 28px;
+  margin: 0 0 12px;
+}
 
-  .safe {
-    color: #4caf50;
-  }
+.intro-content p {
+  font-size: 12px;
+  color: #94a3b8;
+}
 
-  .panel {
-    margin: 15px 0;
-  }
+.noise {
+  position: absolute;
+  inset: -50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  animation: noiseMove 0.3s steps(2) infinite;
+}
 
-  textarea {
-    width: 100%;
-    min-height: 220px;
-    background: #11141a;
-    color: #e6e6e6;
-    border: 1px solid #222;
-    border-radius: 6px;
-    padding: 10px;
-    resize: vertical;
-  }
+/* ===== Layout ===== */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
 
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: center;
-    justify-content: space-between;
-    margin: 20px 0;
-  }
+h2 {
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
 
-  .control {
-    flex: 1;
-    min-width: 200px;
-  }
+textarea {
+  width: 100%;
+  min-height: 180px;
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+}
 
-  input[type="range"] {
-    width: 100%;
-  }
+textarea::placeholder {
+  color: #475569;
+}
 
-  .buttons {
-    display: flex;
-    gap: 10px;
-  }
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0 20px;
+  flex-wrap: wrap;
+}
 
-  button {
-    background: #1e232e;
-    color: #e6e6e6;
-    border: 1px solid #333;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+.actions button {
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
 
-  button:hover {
-    background: #2a3140;
-  }
+.actions button:hover {
+  background: #020617;
+  border-color: #64748b;
+}
 
-  footer {
-    text-align: center;
-    margin-top: 25px;
-    font-size: 0.8rem;
-    color: #777;
-  }
+/* ===== Animations ===== */
+@keyframes introPop {
+  0% { opacity: 0; transform: translate(-50%, -55%); }
+  100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@keyframes introFadeOut {
+  to { opacity: 0; pointer-events: none; }
+}
+
+@keyframes noiseMove {
+  0% { transform: translate(0,0); }
+  100% { transform: translate(-10%,10%); }
+}
 </style>
 </head>
 
 <body>
-<div class="app">
 
-  <header>
-    <h1>Obscura</h1>
-    <p class="subtitle">
-      Open-source Lua Obfuscator<br>
-      <span class="safe">Local only · No data collection · No external connections</span>
-    </p>
-  </header>
+<!-- Intro -->
+<div id="intro">
+  <div class="noise"></div>
+  <div class="intro-content">
+    <h1>OBSCURA</h1>
+    <p>Initializing obfuscation layers...</p>
+  </div>
+</div>
 
-  <div class="panel">
-    <h3>Input (Lua)</h3>
-    <textarea id="input" placeholder="Paste your Lua source code here..."></textarea>
+<div class="container">
+  <h2>INPUT</h2>
+  <textarea id="input" placeholder="Paste your Lua code here..."></textarea>
+
+  <div class="actions">
+    <button onclick="obfuscate()">Obfuscate</button>
+    <button onclick="copyAll()">Copy All</button>
+    <button onclick="downloadFile('lua')">Download as .lua</button>
+    <button onclick="downloadFile('txt')">Download as .txt</button>
   </div>
 
-  <div class="controls">
-    <div class="control">
-      <label>Layers: <b><span id="layerValue">16</span></b></label>
-      <input type="range" id="layers" min="1" max="64" value="16">
-    </div>
-
-    <div class="buttons">
-      <button onclick="obfuscate()">Obfuscate</button>
-      <button onclick="copyOutput()">Copy</button>
-      <button onclick="downloadLua()">Download</button>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h3>Output</h3>
-    <textarea id="output" placeholder="Obfuscated code will appear here..."></textarea>
-  </div>
-
-  <footer>
-    Obscura runs entirely in your browser.  
-    Intended for code protection and educational use.
-  </footer>
-
+  <h2>OUTPUT</h2>
+  <textarea id="output" placeholder="Obfuscated code will appear here..."></textarea>
 </div>
 
 <script>
-  const layersInput = document.getElementById("layers");
-  const layerValue = document.getElementById("layerValue");
-  layerValue.textContent = layersInput.value;
+/* ===== Intro Remove ===== */
+setTimeout(() => {
+  const intro = document.getElementById("intro");
+  if (intro) intro.remove();
+}, 3600);
 
-  layersInput.oninput = () => {
-    layerValue.textContent = layersInput.value;
-  };
+/* ===== Core ===== */
+function obfuscate() {
+  const input = document.getElementById("input").value;
+  if (!input) return alert("No input code.");
 
-  function simpleEncode(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-  }
+  // simple placeholder obfuscation (will be replaced later)
+  const encoded = btoa(unescape(encodeURIComponent(input)));
+  const output =
+`-- Obscura Output
+local d = "${encoded}"
+local f = function(s)
+  return (game and loadstring or loadstring)(
+    game and game:GetService("HttpService"):JSONDecode(
+      '"'..s..'"'
+    ) or s
+  )
+end
+print("Obfuscated by Obscura")`;
 
-  function obfuscate() {
-    let code = document.getElementById("input").value;
-    let layers = parseInt(layersInput.value, 10);
+  document.getElementById("output").value = output;
+}
 
-    for (let i = 0; i < layers; i++) {
-      code = `loadstring(game:HttpGet(function() return "${simpleEncode(code)}" end)())`;
-    }
+function copyAll() {
+  const text = document.getElementById("output").value;
+  if (!text) return alert("Nothing to copy.");
+  navigator.clipboard.writeText(text);
+  alert("Copied.");
+}
 
-    document.getElementById("output").value = code;
-  }
+function downloadFile(ext) {
+  const text = document.getElementById("output").value;
+  if (!text) return alert("Nothing to download.");
 
-  function copyOutput() {
-    const out = document.getElementById("output");
-    out.select();
-    document.execCommand("copy");
-  }
-
-  function downloadLua() {
-    const text = document.getElementById("output").value;
-    const blob = new Blob([text], { type: "text/plain" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "obscura.lua";
-    a.click();
-  }
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "obscura_output." + ext;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 </script>
+
 </body>
 </html>
