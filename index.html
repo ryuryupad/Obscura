@@ -1,0 +1,193 @@
+<!--
+  Obscura – Open Source Lua Obfuscator
+
+  All processing is performed locally in the browser.
+  This project does NOT collect or transmit any data.
+
+  If you are reading this source:
+  Yes, it's open. No, it's not magic.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obscura – Lua Obfuscator</title>
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: monospace;
+    background: #0b0d10;
+    color: #e6e6e6;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    color: #9aa0a6;
+    font-size: 0.9rem;
+  }
+
+  .safe {
+    color: #4caf50;
+  }
+
+  .panel {
+    margin: 15px 0;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    background: #11141a;
+    color: #e6e6e6;
+    border: 1px solid #222;
+    border-radius: 6px;
+    padding: 10px;
+    resize: vertical;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px 0;
+  }
+
+  .control {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    background: #1e232e;
+    color: #e6e6e6;
+    border: 1px solid #333;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #2a3140;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.8rem;
+    color: #777;
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <header>
+    <h1>Obscura</h1>
+    <p class="subtitle">
+      Open-source Lua Obfuscator<br>
+      <span class="safe">Local only · No data collection · No external connections</span>
+    </p>
+  </header>
+
+  <div class="panel">
+    <h3>Input (Lua)</h3>
+    <textarea id="input" placeholder="Paste your Lua source code here..."></textarea>
+  </div>
+
+  <div class="controls">
+    <div class="control">
+      <label>Layers: <b><span id="layerValue">16</span></b></label>
+      <input type="range" id="layers" min="1" max="64" value="16">
+    </div>
+
+    <div class="buttons">
+      <button onclick="obfuscate()">Obfuscate</button>
+      <button onclick="copyOutput()">Copy</button>
+      <button onclick="downloadLua()">Download</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Output</h3>
+    <textarea id="output" placeholder="Obfuscated code will appear here..."></textarea>
+  </div>
+
+  <footer>
+    Obscura runs entirely in your browser.  
+    Intended for code protection and educational use.
+  </footer>
+
+</div>
+
+<script>
+  const layersInput = document.getElementById("layers");
+  const layerValue = document.getElementById("layerValue");
+  layerValue.textContent = layersInput.value;
+
+  layersInput.oninput = () => {
+    layerValue.textContent = layersInput.value;
+  };
+
+  function simpleEncode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  function obfuscate() {
+    let code = document.getElementById("input").value;
+    let layers = parseInt(layersInput.value, 10);
+
+    for (let i = 0; i < layers; i++) {
+      code = `loadstring(game:HttpGet(function() return "${simpleEncode(code)}" end)())`;
+    }
+
+    document.getElementById("output").value = code;
+  }
+
+  function copyOutput() {
+    const out = document.getElementById("output");
+    out.select();
+    document.execCommand("copy");
+  }
+
+  function downloadLua() {
+    const text = document.getElementById("output").value;
+    const blob = new Blob([text], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "obscura.lua";
+    a.click();
+  }
+</script>
+</body>
+</html>
