@@ -53,7 +53,7 @@ body {
 .noise {
   position: absolute;
   inset: -50%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   animation: noiseMove 0.3s steps(2) infinite;
 }
 
@@ -78,6 +78,7 @@ textarea {
   padding: 12px;
   resize: vertical;
   outline: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 textarea::placeholder {
@@ -102,7 +103,7 @@ textarea::placeholder {
 }
 
 .actions button:hover {
-  background: #020617;
+  background: #0f172a;
   border-color: #64748b;
 }
 
@@ -125,7 +126,7 @@ textarea::placeholder {
 
 <body>
 
-<!-- Intro -->
+<!-- Intro Overlay -->
 <div id="intro">
   <div class="noise"></div>
   <div class="intro-content">
@@ -146,7 +147,7 @@ textarea::placeholder {
   </div>
 
   <h2>OUTPUT</h2>
-  <textarea id="output" placeholder="Obfuscated code will appear here..."></textarea>
+  <textarea id="output" placeholder="Obfuscated code will appear here..." readonly></textarea>
 </div>
 
 <script>
@@ -156,26 +157,86 @@ setTimeout(() => {
   if (intro) intro.remove();
 }, 3600);
 
-/* ===== Core ===== */
+/* ===== 難読化コアロジック ===== */
+// ランダムな16進数形式の変数名を生成する関数（例: _0x8f2a4c）
+function makeTrashName() {
+  return "_0x" + Math.random().toString(16).slice(2, 8);
+}
+
+// 読解を邪魔するための無意味なLuaのダミーコード（ゴミコード）をランダム生成する関数
+function makeJunkCode() {
+  const junkTemplates = [
+    `local ${makeTrashName()} = math.sin(math.pi * 0.5)`,
+    `local ${makeTrashName()} = tonumber("10") or 0`,
+    `if false then print("${makeTrashName()}") end`,
+    `local ${makeTrashName()} = table.concat({}, "")`,
+    `for _ = 1, 0 do local ${makeTrashName()} = 99 end`,
+    `local ${makeTrashName()} = string.reverse("${makeTrashName()}")`,
+    `local ${makeTrashName()} = type(pairs) == "function"`
+  ];
+  // ランダムに3つ選んで結合
+  let res = "";
+  for (let i = 0; i < 3; i++) {
+    res += "    " + junkTemplates[Math.floor(Math.random() * junkTemplates.length)] + "\n";
+  }
+  return res;
+}
+
 function obfuscate() {
   const input = document.getElementById("input").value;
   if (!input) return alert("No input code.");
 
-  // simple placeholder obfuscation (will be replaced later)
-  const encoded = btoa(unescape(encodeURIComponent(input)));
-  const output =
-`-- Obscura Output
-local d = "${encoded}"
-local f = function(s)
-  return (game and loadstring or loadstring)(
-    game and game:GetService("HttpService"):JSONDecode(
-      '"'..s..'"'
-    ) or s
-  )
-end
-print("Obfuscated by Obscura")`;
+  try {
+    // 1. ボタンを押すたびにすべての主要な内部変数名・関数名をランダムに変更
+    const v_data      = makeTrashName(); // 暗号データの格納先
+    const v_decode    = makeTrashName(); // デコード関数名
+    const v_b         = makeTrashName(); // Base64テーブル
+    const v_x         = makeTrashName(); // ローカル引数
+    const v_r         = makeTrashName(); // ビット文字列用
+    const v_f         = makeTrashName(); // 計算用
+    const v_i         = makeTrashName(); // ループカウンタ
+    const v_c         = makeTrashName(); // 文字コード
+    const v_raw       = makeTrashName(); // 復元された生コード
+    const v_exec      = makeTrashName(); // loadstring実行用
 
-  document.getElementById("output").value = output;
+    // 2. 元のLuaコードをBase64化
+    const b64Encoded = btoa(unescape(encodeURIComponent(input)));
+
+    // 3. 元の文字列をすべて `\数字`（ByteCodeエスケープ形式）の羅列へ100%変換
+    let byteCodeObfuscated = "";
+    for (let i = 0; i < b64Encoded.length; i++) {
+      byteCodeObfuscated += "\\" + b64Encoded.charCodeAt(i);
+    }
+
+    // 4. ランダム変数名と、各行に埋め込まれるゴミコードをブレンドして出力コードをビルド
+    const outputCode = `-- Obfuscated by Obscura
+local ${v_data} = "${byteCodeObfuscated}"
+${makeJunkCode()}
+local function ${v_decode}(data)
+    local ${v_b} = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    data = string.gsub(data, '[^'..${v_b}..'=]', '')
+${makeJunkCode()}
+    return (data:gsub('.', function(${v_x})
+        if (${v_x} == '=') then return '' end
+        local ${v_r}, ${v_f} = '', (${v_b}:find(${v_x}) - 1)
+        for ${v_i} = 6, 1, -1 do ${v_r} = ${v_r} .. (${v_f} % 2^${v_i} - ${v_f} % 2^(${v_i}-1) > 0 and '1' or '0') end
+        return ${v_r};
+    end):gsub('%d%d%d%d%d%d%d%d', function(${v_x})
+        local ${v_c} = 0
+${makeJunkCode()}
+        for ${v_i} = 1, 8 do ${v_c} = ${v_c} + (${v_x}:sub(${v_i},${v_i}) == '1' and 2^(8-${v_i}) or 0) end
+        return string.char(${v_c})
+    end))
+end
+${makeJunkCode()}
+local ${v_raw} = ${v_decode}(${v_data})
+local ${v_exec} = assert((loadstring or load)(${v_raw}))
+${v_exec}()`;
+
+    document.getElementById("output").value = outputCode;
+  } catch (e) {
+    alert("Obfuscation failed: " + e.message);
+  }
 }
 
 function copyAll() {
