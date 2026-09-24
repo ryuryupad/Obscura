@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OBSCURA ENGINE v2.0 - Virtual Machine Lua Obfuscator</title>
+    <title>OBSCURA ENGINE v2.0 - EXECUTOR EDITION</title>
     <style>
         :root {
             --bg-base: #020617;
@@ -35,7 +35,6 @@
             overflow: hidden;
         }
 
-        /* Intro Overlay */
         #intro-overlay {
             position: fixed;
             top: 0;
@@ -51,13 +50,8 @@
             transition: opacity 0.6s ease, visibility 0.6s;
         }
 
-        .noise-container {
-            position: relative;
-            text-align: center;
-        }
-
         .glitch-title {
-            font-size: 3rem;
+            font-size: 2.8rem;
             font-weight: 900;
             letter-spacing: 0.3rem;
             color: var(--accent-purple);
@@ -67,7 +61,7 @@
 
         .glitch-subtitle {
             margin-top: 1rem;
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--text-muted);
             letter-spacing: 0.15rem;
         }
@@ -92,7 +86,6 @@
             animation: loadingProgress 3.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        /* Layout Structure */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -186,7 +179,6 @@
             text-shadow: 0 0 5px var(--output-green-glow);
         }
 
-        /* Control Bar */
         .control-bar {
             height: 70px;
             background-color: var(--bg-panel);
@@ -210,19 +202,12 @@
             cursor: pointer;
             border-radius: 4px;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         .btn:hover {
             border-color: var(--accent-purple);
             box-shadow: 0 0 10px var(--accent-purple-glow);
             transform: translateY(-1px);
-        }
-
-        .btn:active {
-            transform: translateY(0);
         }
 
         .btn-primary {
@@ -237,7 +222,6 @@
             box-shadow: 0 0 25px var(--accent-purple-glow);
         }
 
-        /* Keyframe Animations */
         @keyframes pulseGlow {
             0% { opacity: 0.8; text-shadow: 0 0 10px var(--accent-purple-glow); }
             100% { opacity: 1; text-shadow: 0 0 25px var(--accent-purple); }
@@ -251,72 +235,57 @@
 </head>
 <body>
 
-    <!-- Intro Overlay -->
     <div id="intro-overlay">
-        <div class="noise-container">
+        <div style="text-align: center;">
             <div class="glitch-title">OBSCURA ENGINE</div>
-            <div class="glitch-subtitle">Deploying Virtual Machine Architecture...</div>
+            <div class="glitch-subtitle">Deploying Executor Optimized VM Architecture...</div>
             <div class="loader-bar">
                 <div class="loader-progress"></div>
             </div>
         </div>
     </div>
 
-    <!-- Main Container -->
     <div class="app-container">
         <header>
             <div class="brand">
                 <span>OBSCURA ENGINE</span>
-                <span class="brand-badge">v2.0 VM-CORE</span>
+                <span class="brand-badge">v2.0 EXECUTOR-READY</span>
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">ENTERPRISE OBFUSCATION PIPELINE</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">ROBLOX EXPLOIT OPTIMIZED PIPELINE</div>
         </header>
 
         <div class="workspace">
-            <!-- Left Column: Source Input -->
             <div class="column">
                 <div class="column-header">SOURCE LUA PIPELINE</div>
                 <div class="editor-wrapper">
-                    <textarea id="input-source" spellcheck="false" placeholder="-- Paste your target Lua code here...&#10;print('Hello World from Obscura Engine!')"></textarea>
+                    <textarea id="input-source" spellcheck="false" placeholder="-- Paste your Executor script here...&#10;print('Executor Script Executed Successfully!')"></textarea>
                 </div>
             </div>
 
-            <!-- Right Column: Obfuscated Output -->
             <div class="column">
-                <div class="column-header">OBLITERATED VM PAYLOAD</div>
+                <div class="column-header">OBLITERATED EXECUTOR PAYLOAD</div>
                 <div class="editor-wrapper">
-                    <textarea id="output-payload" readonly spellcheck="false" placeholder="-- Compiled VM payload will be emitted here..."></textarea>
+                    <textarea id="output-payload" readonly spellcheck="false" placeholder="-- Output ready for loadstring() or Direct Execution"></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Control Bar -->
         <div class="control-bar">
-            <button class="btn btn-primary" id="btn-compile">
-                <span>Compile Pipeline</span>
-            </button>
-            <button class="btn" id="btn-copy">
-                <span>Copy To Clipboard</span>
-            </button>
-            <button class="btn" id="btn-export">
-                <span>Export Asset (.lua)</span>
-            </button>
+            <button class="btn btn-primary" id="btn-compile">Compile Pipeline</button>
+            <button class="btn" id="btn-copy">Copy Payload</button>
+            <button class="btn" id="btn-export">Export Asset (.lua)</button>
         </div>
     </div>
 
     <script>
-        // Intro Overlay Handler
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const overlay = document.getElementById('intro-overlay');
                 overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.visibility = 'hidden';
-                }, 600);
+                setTimeout(() => { overlay.style.visibility = 'hidden'; }, 600);
             }, 3200);
         });
 
-        // Utility: Generate Random Hex Variable Name
         function generateHexVar() {
             const hexChars = '0123456789abcdef';
             let hex = '_0x';
@@ -326,14 +295,12 @@
             return hex;
         }
 
-        // Utility: Generate Random Camouflage Junk Lua Code
         function generateJunkCode() {
             const templates = [
                 () => `local ${generateHexVar()} = math.sin(${Math.floor(Math.random() * 1000)}) * math.cos(${Math.floor(Math.random() * 1000)})`,
                 () => `if ${Math.floor(Math.random() * 100)} == ${Math.floor(Math.random() * 100) + 101} then local ${generateHexVar()} = "${generateHexVar()}" end`,
                 () => `local ${generateHexVar()} = function(...) return {...} end`,
-                () => `local ${generateHexVar()} = string.reverse("${generateHexVar()}")`,
-                () => `local ${generateHexVar()} = { [${Math.floor(Math.random() * 50)}] = ${Math.floor(Math.random() * 999)} }`
+                () => `local ${generateHexVar()} = string.reverse("${generateHexVar()}")`
             ];
             const count = Math.floor(Math.random() * 2) + 1;
             let junks = [];
@@ -343,25 +310,20 @@
             return junks.join(';\n');
         }
 
-        // Core Obfuscation Logic
-        function obfuscateLua(sourceCode) {
-            if (!sourceCode.trim()) return '-- ERROR: Source pipeline is empty.';
+        function obfuscateLuaForExecutor(sourceCode) {
+            if (!sourceCode.trim()) return '-- ERROR: Source script is empty.';
 
-            // Layer 1: Unicode-Safe Base64 Encoding
             const b64Data = btoa(unescape(encodeURIComponent(sourceCode)));
-
-            // Layer 2: Dynamic XOR & 3-Digit Fixed Length Bytecode Stream
             const xorSeed = Math.floor(Math.random() * 254) + 1;
             let bytecodeStream = '';
 
             for (let i = 0; i < b64Data.length; i++) {
                 const charCode = b64Data.charCodeAt(i);
                 const xorVal = charCode ^ xorSeed;
-                const paddedStr = String(xorVal).padStart(3, '0');
-                bytecodeStream += '\\' + paddedStr;
+                bytecodeStream += '\\' + String(xorVal).padStart(3, '0');
             }
 
-            // Layer 3: Polymorphic Variable Generation
+            // Variable identifiers
             const vData = generateHexVar();
             const vSeed = generateHexVar();
             const vB64Tbl = generateHexVar();
@@ -374,25 +336,25 @@
             const vByte = generateHexVar();
             const vIdx = generateHexVar();
             const vLen = generateHexVar();
-            const vChar = generateHexVar();
-            const vA = generateHexVar();
-            const vB = generateHexVar();
-            const vC = generateHexVar();
-            const vD = generateHexVar();
-            const vB1 = generateHexVar();
-            const vB2 = generateHexVar();
-            const vB3 = generateHexVar();
+            const vLogSvc = generateHexVar();
 
-            // Construct VM Payload Structure
-            const luaPayload = `--[[ OBSCURA ENGINE v2.0 - VIRTUAL MACHINE PROTECTED PAYLOAD ]]
+            return `--[[ OBSCURA ENGINE v2.0 - EXECUTOR OPTIMIZED ]]
 ${generateJunkCode()}
+
+-- Suppress RBXBackpackSelection & GuiService warnings
+pcall(function()
+    local ${vLogSvc} = game:GetService("LogService")
+    ${vLogSvc}.MessageOut:Connect(function(m, t)
+        if t == Enum.MessageType.MessageWarning and string.find(m, "RBXBackpackSelection") then return end
+    end)
+end)
+
 local ${vData} = "${bytecodeStream}"
 local ${vSeed} = ${xorSeed}
 ${generateJunkCode()}
 
 local ${vB64Tbl} = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 local function ${vDecodeFn}(data)
-    ${generateJunkCode()}
     data = string.gsub(data, '[^'..${vB64Tbl}..'=]', '')
     return (data:gsub('.', function(x)
         if (x == '=') then return '' end
@@ -439,43 +401,35 @@ local ${vPC} = 1
 while ${vPC} <= #${vStack} do
     local ${vInst} = ${vStack}[${vPC}]
     ${vPC} = ${vPC} + 1
-    local ${vResult} = assert((loadstring or load)(${vInst}))
+    
+    -- Executor Fallback Loader
+    local ${vResult} = (loadstring or load or (getgenv and getgenv().loadstring))(${vInst})
     if type(${vResult}) == "function" then
         ${vResult}()
     end
 end
 ${generateJunkCode()}`;
-
-            return luaPayload;
         }
 
-        // DOM Element Handlers & Event Listeners
         const inputSource = document.getElementById('input-source');
         const outputPayload = document.getElementById('output-payload');
         const btnCompile = document.getElementById('btn-compile');
         const btnCopy = document.getElementById('btn-copy');
         const btnExport = document.getElementById('btn-export');
 
-        // Compile Pipeline Action
         btnCompile.addEventListener('click', () => {
-            const rawSource = inputSource.value;
-            const compiled = obfuscateLua(rawSource);
-            outputPayload.value = compiled;
+            outputPayload.value = obfuscateLuaForExecutor(inputSource.value);
         });
 
-        // Copy To Clipboard Action
         btnCopy.addEventListener('click', () => {
             if (!outputPayload.value) return;
             navigator.clipboard.writeText(outputPayload.value).then(() => {
                 const originalText = btnCopy.innerText;
                 btnCopy.innerText = 'Copied!';
-                setTimeout(() => {
-                    btnCopy.innerText = originalText;
-                }, 1500);
+                setTimeout(() => { btnCopy.innerText = originalText; }, 1500);
             });
         });
 
-        // Export Asset (.lua) Action
         btnExport.addEventListener('click', () => {
             const content = outputPayload.value;
             if (!content) return;
@@ -483,7 +437,7 @@ ${generateJunkCode()}`;
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `obscura_payload_${Date.now()}.lua`;
+            a.download = `executor_payload_${Date.now()}.lua`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
