@@ -1,264 +1,494 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>Obscura</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBSCURA ENGINE v2.0 - Virtual Machine Lua Obfuscator</title>
+    <style>
+        :root {
+            --bg-base: #020617;
+            --bg-panel: #0f172a;
+            --bg-header: #1e293b;
+            --accent-purple: #a855f7;
+            --accent-purple-glow: rgba(168, 85, 247, 0.4);
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --output-green: #34d399;
+            --output-green-glow: rgba(52, 211, 153, 0.2);
+            --border-color: #334155;
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+        }
 
-<style>
-/* ===== Base ===== */
-* {
-  box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
 
-body {
-  margin: 0;
-  background: #020617;
-  color: #e5e7eb;
-  padding: 20px;
-}
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            overflow: hidden;
+        }
 
-/* ===== Intro Overlay ===== */
-#intro {
-  position: fixed;
-  inset: 0;
-  background: #020617;
-  z-index: 9999;
-  overflow: hidden;
-  animation: introFadeOut 1s ease forwards;
-  animation-delay: 2.6s;
-}
+        /* Intro Overlay */
+        #intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-base);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
 
-.intro-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  animation: introPop 1.6s ease forwards;
-}
+        .noise-container {
+            position: relative;
+            text-align: center;
+        }
 
-.intro-content h1 {
-  letter-spacing: 0.35em;
-  font-size: 28px;
-  margin: 0 0 12px;
-}
+        .glitch-title {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 0.3rem;
+            color: var(--accent-purple);
+            text-shadow: 0 0 20px var(--accent-purple-glow);
+            animation: pulseGlow 1.5s infinite alternate;
+        }
 
-.intro-content p {
-  font-size: 12px;
-  color: #94a3b8;
-}
+        .glitch-subtitle {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: var(--text-muted);
+            letter-spacing: 0.15rem;
+        }
 
-.noise {
-  position: absolute;
-  inset: -50%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-  animation: noiseMove 0.3s steps(2) infinite;
-}
+        .loader-bar {
+            width: 280px;
+            height: 3px;
+            background: var(--border-color);
+            margin-top: 2rem;
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+        }
 
-/* ===== Layout ===== */
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-}
+        .loader-progress {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent-purple), transparent);
+            animation: loadingProgress 3.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
 
-h2 {
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  margin-bottom: 10px;
-}
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
 
-textarea {
-  width: 100%;
-  min-height: 180px;
-  background: #020617;
-  color: #e5e7eb;
-  border: 1px solid #334155;
-  padding: 12px;
-  resize: vertical;
-  outline: none;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
+        header {
+            height: 50px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+        }
 
-textarea::placeholder {
-  color: #475569;
-}
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 0.1rem;
+            color: var(--accent-purple);
+        }
 
-/* ===== Actions ===== */
-.actions {
-  display: flex;
-  gap: 10px;
-  margin: 12px 0 20px;
-  flex-wrap: wrap;
-}
+        .brand-badge {
+            font-size: 0.7rem;
+            background: var(--accent-purple-glow);
+            border: 1px solid var(--accent-purple);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
 
-.actions button {
-  background: #020617;
-  color: #e5e7eb;
-  border: 1px solid #334155;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: background 0.2s, border 0.2s;
-}
+        .workspace {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 120px);
+            gap: 1px;
+            background-color: var(--border-color);
+        }
 
-.actions button:hover {
-  background: #0f172a;
-  border-color: #64748b;
-}
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-base);
+            position: relative;
+        }
 
-/* ===== Animations ===== */
-@keyframes introPop {
-  0% { opacity: 0; transform: translate(-50%, -55%); }
-  100% { opacity: 1; transform: translate(-50%, -50%); }
-}
+        .column-header {
+            height: 36px;
+            background-color: var(--bg-header);
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+        }
 
-@keyframes introFadeOut {
-  to { opacity: 0; pointer-events: none; }
-}
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
 
-@keyframes noiseMove {
-  0% { transform: translate(0,0); }
-  100% { transform: translate(-10%,10%); }
-}
-</style>
+        textarea {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-base);
+            border: none;
+            outline: none;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            resize: none;
+            user-select: text;
+        }
+
+        #input-source {
+            color: var(--text-main);
+        }
+
+        #output-payload {
+            color: var(--output-green);
+            background-color: #010409;
+            text-shadow: 0 0 5px var(--output-green-glow);
+        }
+
+        /* Control Bar */
+        .control-bar {
+            height: 70px;
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 0 2rem;
+        }
+
+        .btn {
+            background-color: var(--bg-header);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 10px var(--accent-purple-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7e22ce, #a855f7);
+            border: none;
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--accent-purple-glow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #9333ea, #c084fc);
+            box-shadow: 0 0 25px var(--accent-purple-glow);
+        }
+
+        /* Keyframe Animations */
+        @keyframes pulseGlow {
+            0% { opacity: 0.8; text-shadow: 0 0 10px var(--accent-purple-glow); }
+            100% { opacity: 1; text-shadow: 0 0 25px var(--accent-purple); }
+        }
+
+        @keyframes loadingProgress {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- Intro Overlay -->
-<div id="intro">
-  <div class="noise"></div>
-  <div class="intro-content">
-    <h1>OBSCURA</h1>
-    <p>Initializing obfuscation layers...</p>
-  </div>
-</div>
+    <!-- Intro Overlay -->
+    <div id="intro-overlay">
+        <div class="noise-container">
+            <div class="glitch-title">OBSCURA ENGINE</div>
+            <div class="glitch-subtitle">Deploying Virtual Machine Architecture...</div>
+            <div class="loader-bar">
+                <div class="loader-progress"></div>
+            </div>
+        </div>
+    </div>
 
-<div class="container">
-  <h2>INPUT</h2>
-  <textarea id="input" placeholder="Paste your Lua code here..."></textarea>
+    <!-- Main Container -->
+    <div class="app-container">
+        <header>
+            <div class="brand">
+                <span>OBSCURA ENGINE</span>
+                <span class="brand-badge">v2.0 VM-CORE</span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">ENTERPRISE OBFUSCATION PIPELINE</div>
+        </header>
 
-  <div class="actions">
-    <button onclick="obfuscate()">Obfuscate</button>
-    <button onclick="copyAll()">Copy All</button>
-    <button onclick="downloadFile('lua')">Download as .lua</button>
-    <button onclick="downloadFile('txt')">Download as .txt</button>
-  </div>
+        <div class="workspace">
+            <!-- Left Column: Source Input -->
+            <div class="column">
+                <div class="column-header">SOURCE LUA PIPELINE</div>
+                <div class="editor-wrapper">
+                    <textarea id="input-source" spellcheck="false" placeholder="-- Paste your target Lua code here...&#10;print('Hello World from Obscura Engine!')"></textarea>
+                </div>
+            </div>
 
-  <h2>OUTPUT</h2>
-  <textarea id="output" placeholder="Obfuscated code will appear here..." readonly></textarea>
-</div>
+            <!-- Right Column: Obfuscated Output -->
+            <div class="column">
+                <div class="column-header">OBLITERATED VM PAYLOAD</div>
+                <div class="editor-wrapper">
+                    <textarea id="output-payload" readonly spellcheck="false" placeholder="-- Compiled VM payload will be emitted here..."></textarea>
+                </div>
+            </div>
+        </div>
 
-<script>
-/* ===== Intro Remove ===== */
-setTimeout(() => {
-  const intro = document.getElementById("intro");
-  if (intro) intro.remove();
-}, 3600);
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <button class="btn btn-primary" id="btn-compile">
+                <span>Compile Pipeline</span>
+            </button>
+            <button class="btn" id="btn-copy">
+                <span>Copy To Clipboard</span>
+            </button>
+            <button class="btn" id="btn-export">
+                <span>Export Asset (.lua)</span>
+            </button>
+        </div>
+    </div>
 
-/* ===== 難読化コアロジック ===== */
-// ランダムな16進数形式の変数名を生成する関数（例: _0x8f2a4c）
-function makeTrashName() {
-  return "_0x" + Math.random().toString(16).slice(2, 8);
-}
+    <script>
+        // Intro Overlay Handler
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const overlay = document.getElementById('intro-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.visibility = 'hidden';
+                }, 600);
+            }, 3200);
+        });
 
-// 読解を邪魔するための無意味なLuaのダミーコード（ゴミコード）をランダム生成する関数
-function makeJunkCode() {
-  const junkTemplates = [
-    `local ${makeTrashName()} = math.sin(math.pi * 0.5)`,
-    `local ${makeTrashName()} = tonumber("10") or 0`,
-    `if false then print("${makeTrashName()}") end`,
-    `local ${makeTrashName()} = table.concat({}, "")`,
-    `for _ = 1, 0 do local ${makeTrashName()} = 99 end`,
-    `local ${makeTrashName()} = string.reverse("${makeTrashName()}")`,
-    `local ${makeTrashName()} = type(pairs) == "function"`
-  ];
-  // ランダムに3つ選んで結合
-  let res = "";
-  for (let i = 0; i < 3; i++) {
-    res += "    " + junkTemplates[Math.floor(Math.random() * junkTemplates.length)] + "\n";
-  }
-  return res;
-}
+        // Utility: Generate Random Hex Variable Name
+        function generateHexVar() {
+            const hexChars = '0123456789abcdef';
+            let hex = '_0x';
+            for (let i = 0; i < 6; i++) {
+                hex += hexChars[Math.floor(Math.random() * hexChars.length)];
+            }
+            return hex;
+        }
 
-function obfuscate() {
-  const input = document.getElementById("input").value;
-  if (!input) return alert("No input code.");
+        // Utility: Generate Random Camouflage Junk Lua Code
+        function generateJunkCode() {
+            const templates = [
+                () => `local ${generateHexVar()} = math.sin(${Math.floor(Math.random() * 1000)}) * math.cos(${Math.floor(Math.random() * 1000)})`,
+                () => `if ${Math.floor(Math.random() * 100)} == ${Math.floor(Math.random() * 100) + 101} then local ${generateHexVar()} = "${generateHexVar()}" end`,
+                () => `local ${generateHexVar()} = function(...) return {...} end`,
+                () => `local ${generateHexVar()} = string.reverse("${generateHexVar()}")`,
+                () => `local ${generateHexVar()} = { [${Math.floor(Math.random() * 50)}] = ${Math.floor(Math.random() * 999)} }`
+            ];
+            const count = Math.floor(Math.random() * 2) + 1;
+            let junks = [];
+            for (let i = 0; i < count; i++) {
+                junks.push(templates[Math.floor(Math.random() * templates.length)]());
+            }
+            return junks.join(';\n');
+        }
 
-  try {
-    // 1. ボタンを押すたびにすべての主要な内部変数名・関数名をランダムに変更
-    const v_data      = makeTrashName(); // 暗号データの格納先
-    const v_decode    = makeTrashName(); // デコード関数名
-    const v_b         = makeTrashName(); // Base64テーブル
-    const v_x         = makeTrashName(); // ローカル引数
-    const v_r         = makeTrashName(); // ビット文字列用
-    const v_f         = makeTrashName(); // 計算用
-    const v_i         = makeTrashName(); // ループカウンタ
-    const v_c         = makeTrashName(); // 文字コード
-    const v_raw       = makeTrashName(); // 復元された生コード
-    const v_exec      = makeTrashName(); // loadstring実行用
+        // Core Obfuscation Logic
+        function obfuscateLua(sourceCode) {
+            if (!sourceCode.trim()) return '-- ERROR: Source pipeline is empty.';
 
-    // 2. 元のLuaコードをBase64化
-    const b64Encoded = btoa(unescape(encodeURIComponent(input)));
+            // Layer 1: Unicode-Safe Base64 Encoding
+            const b64Data = btoa(unescape(encodeURIComponent(sourceCode)));
 
-    // 3. 元の文字列をすべて `\数字`（ByteCodeエスケープ形式）の羅列へ100%変換
-    let byteCodeObfuscated = "";
-    for (let i = 0; i < b64Encoded.length; i++) {
-      byteCodeObfuscated += "\\" + b64Encoded.charCodeAt(i);
-    }
+            // Layer 2: Dynamic XOR & 3-Digit Fixed Length Bytecode Stream
+            const xorSeed = Math.floor(Math.random() * 254) + 1;
+            let bytecodeStream = '';
 
-    // 4. ランダム変数名と、各行に埋め込まれるゴミコードをブレンドして出力コードをビルド
-    const outputCode = `-- Obfuscated by Obscura
-local ${v_data} = "${byteCodeObfuscated}"
-${makeJunkCode()}
-local function ${v_decode}(data)
-    local ${v_b} = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    data = string.gsub(data, '[^'..${v_b}..'=]', '')
-${makeJunkCode()}
-    return (data:gsub('.', function(${v_x})
-        if (${v_x} == '=') then return '' end
-        local ${v_r}, ${v_f} = '', (${v_b}:find(${v_x}) - 1)
-        for ${v_i} = 6, 1, -1 do ${v_r} = ${v_r} .. (${v_f} % 2^${v_i} - ${v_f} % 2^(${v_i}-1) > 0 and '1' or '0') end
-        return ${v_r};
-    end):gsub('%d%d%d%d%d%d%d%d', function(${v_x})
-        local ${v_c} = 0
-${makeJunkCode()}
-        for ${v_i} = 1, 8 do ${v_c} = ${v_c} + (${v_x}:sub(${v_i},${v_i}) == '1' and 2^(8-${v_i}) or 0) end
-        return string.char(${v_c})
+            for (let i = 0; i < b64Data.length; i++) {
+                const charCode = b64Data.charCodeAt(i);
+                const xorVal = charCode ^ xorSeed;
+                const paddedStr = String(xorVal).padStart(3, '0');
+                bytecodeStream += '\\' + paddedStr;
+            }
+
+            // Layer 3: Polymorphic Variable Generation
+            const vData = generateHexVar();
+            const vSeed = generateHexVar();
+            const vB64Tbl = generateHexVar();
+            const vDecodeFn = generateHexVar();
+            const vStack = generateHexVar();
+            const vPC = generateHexVar();
+            const vInst = generateHexVar();
+            const vResult = generateHexVar();
+            const vStrAcc = generateHexVar();
+            const vByte = generateHexVar();
+            const vIdx = generateHexVar();
+            const vLen = generateHexVar();
+            const vChar = generateHexVar();
+            const vA = generateHexVar();
+            const vB = generateHexVar();
+            const vC = generateHexVar();
+            const vD = generateHexVar();
+            const vB1 = generateHexVar();
+            const vB2 = generateHexVar();
+            const vB3 = generateHexVar();
+
+            // Construct VM Payload Structure
+            const luaPayload = `--[[ OBSCURA ENGINE v2.0 - VIRTUAL MACHINE PROTECTED PAYLOAD ]]
+${generateJunkCode()}
+local ${vData} = "${bytecodeStream}"
+local ${vSeed} = ${xorSeed}
+${generateJunkCode()}
+
+local ${vB64Tbl} = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local function ${vDecodeFn}(data)
+    ${generateJunkCode()}
+    data = string.gsub(data, '[^'..${vB64Tbl}..'=]', '')
+    return (data:gsub('.', function(x)
+        if (x == '=') then return '' end
+        local r,f='',( ${vB64Tbl}:find(x)-1 )
+        for i=6,1,-1 do r=r..(f%2^i>=2^(i-1) and '1' or '0') end
+        return r
+    end):gsub('%d%d%d%d%d%d%d%d', function(x)
+        local c=0
+        for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
+        return string.char(c)
     end))
 end
-${makeJunkCode()}
-local ${v_raw} = ${v_decode}(${v_data})
-local ${v_exec} = assert((loadstring or load)(${v_raw}))
-${v_exec}()`;
 
-    document.getElementById("output").value = outputCode;
-  } catch (e) {
-    alert("Obfuscation failed: " + e.message);
-  }
-}
+${generateJunkCode()}
+local ${vStrAcc} = {}
+local ${vLen} = #${vData}
+local ${vIdx} = 1
 
-function copyAll() {
-  const text = document.getElementById("output").value;
-  if (!text) return alert("Nothing to copy.");
-  navigator.clipboard.writeText(text);
-  alert("Copied.");
-}
+while ${vIdx} <= ${vLen} do
+    local ${vByte} = tonumber(${vData}:sub(${vIdx}, ${vIdx}+2))
+    table.insert(${vStrAcc}, string.char(bit32 and bit32.bxor(${vByte}, ${vSeed}) or (function(a,b)
+        local p,c=1,0
+        while a>0 and b>0 do
+            local ra,rb=a%2,b%2
+            if ra~=rb then c=c+p end
+            a,b,p=(a-ra)/2,(b-rb)/2,p*2
+        end
+        if a<b then a=b end
+        while a>0 do
+            local ra=a%2
+            if ra>0 then c=c+p end
+            a,p=(a-ra)/2,p*2
+        end
+        return c
+    end)(${vByte}, ${vSeed})))
+    ${vIdx} = ${vIdx} + 3
+end
 
-function downloadFile(ext) {
-  const text = document.getElementById("output").value;
-  if (!text) return alert("Nothing to download.");
+${generateJunkCode()}
+local ${vStack} = {}
+table.insert(${vStack}, ${vDecodeFn}(table.concat(${vStrAcc})))
 
-  const blob = new Blob([text], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "obscura_output." + ext;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-</script>
+local ${vPC} = 1
+while ${vPC} <= #${vStack} do
+    local ${vInst} = ${vStack}[${vPC}]
+    ${vPC} = ${vPC} + 1
+    local ${vResult} = assert((loadstring or load)(${vInst}))
+    if type(${vResult}) == "function" then
+        ${vResult}()
+    end
+end
+${generateJunkCode()}`;
 
+            return luaPayload;
+        }
+
+        // DOM Element Handlers & Event Listeners
+        const inputSource = document.getElementById('input-source');
+        const outputPayload = document.getElementById('output-payload');
+        const btnCompile = document.getElementById('btn-compile');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnExport = document.getElementById('btn-export');
+
+        // Compile Pipeline Action
+        btnCompile.addEventListener('click', () => {
+            const rawSource = inputSource.value;
+            const compiled = obfuscateLua(rawSource);
+            outputPayload.value = compiled;
+        });
+
+        // Copy To Clipboard Action
+        btnCopy.addEventListener('click', () => {
+            if (!outputPayload.value) return;
+            navigator.clipboard.writeText(outputPayload.value).then(() => {
+                const originalText = btnCopy.innerText;
+                btnCopy.innerText = 'Copied!';
+                setTimeout(() => {
+                    btnCopy.innerText = originalText;
+                }, 1500);
+            });
+        });
+
+        // Export Asset (.lua) Action
+        btnExport.addEventListener('click', () => {
+            const content = outputPayload.value;
+            if (!content) return;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `obscura_payload_${Date.now()}.lua`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
 </body>
 </html>
